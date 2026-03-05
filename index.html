@@ -877,11 +877,38 @@ const app = {
         const daysDiff = Math.max(1, (maxTime - minTime) / 86400);
         let avgDailyQuota = 0;
         let predictedDays = '--';
-        
+
         if (this.state.globalStats && this.state.globalStats.stats.remain_quota > 0) {
-            const totalQuotaInPeriod = Object.values(dailyData).reduce((sum, d) => sum + d.quota, 0);
-            avgDailyQuota = totalQuotaInPeriod / daysDiff;
-            
+            // 优化预测算法：使用加权移动平均，近期数据权重更高
+            const dates = Object.keys(dailyData).sort();
+            const recentDays = Math.min(7, dates.length); // 取最近7天或全部数据
+            const recentDates = dates.slice(-recentDays);
+
+            // 计算加权平均（近期权重更高）
+            let weightedSum = 0;
+            let weightTotal = 0;
+            recentDates.forEach((date, index) => {
+                const weight = index + 1; // 权重递增
+                weightedSum += dailyData[date].quota * weight;
+                weightTotal += weight;
+            });
+
+            avgDailyQuota = weightTotal > 0 ? weightedSum / weightTotal : 0;
+
+            // 如果数据量足够，计算趋势调整
+            if (recentDates.length >= 3) {
+                const firstHalf = recentDates.slice(0, Math.floor(recentDates.length / 2));
+                const secondHalf = recentDates.slice(Math.floor(recentDates.length / 2));
+
+                const firstAvg = firstHalf.reduce((sum, d) => sum + dailyData[d].quota, 0) / firstHalf.length;
+                const secondAvg = secondHalf.reduce((sum, d) => sum + dailyData[d].quota, 0) / secondHalf.length;
+
+                // 如果消耗呈上升趋势，调整预测值
+                if (secondAvg > firstAvg * 1.2) {
+                    avgDailyQuota = secondAvg * 1.1; // 趋势上升，预测值上调10%
+                }
+            }
+
             if (avgDailyQuota > 0) {
                 const remain = this.state.globalStats.stats.remain_quota;
                 const days = Math.round(remain / avgDailyQuota);
@@ -1015,9 +1042,12 @@ const app = {
             return;
         }
 
+        // 按时间倒序排序（最新的在前）
+        const sortedData = [...data].sort((a, b) => b.created_at - a.created_at);
+
         const start = (this.state.tablePage - 1) * this.state.tablePageSize;
-        const paginatedData = data.slice(start, start + this.state.tablePageSize);
-        const totalPages = Math.max(1, Math.ceil(data.length / this.state.tablePageSize));
+        const paginatedData = sortedData.slice(start, start + this.state.tablePageSize);
+        const totalPages = Math.max(1, Math.ceil(sortedData.length / this.state.tablePageSize));
 
         tbody.innerHTML = paginatedData.map(item => `
             <tr class="hover:bg-slate-50/80 transition-colors group">
@@ -1048,9 +1078,9 @@ const app = {
             </tr>
         `).join('');
 
-        document.getElementById('table-info').innerHTML = `展现第 <b class="text-slate-800">${start + 1}</b> - <b class="text-slate-800">${Math.min(start + this.state.tablePageSize, data.length)}</b> 块碎片，库中总计 <b class="text-blue-600">${data.length}</b> 块`;
+        document.getElementById('table-info').innerHTML = `展现第 <b class="text-slate-800">${start + 1}</b> - <b class="text-slate-800">${Math.min(start + this.state.tablePageSize, sortedData.length)}</b> 块碎片，库中总计 <b class="text-blue-600">${sortedData.length}</b> 块`;
         document.getElementById('table-page-info').innerText = `${this.state.tablePage} / ${totalPages}`;
-        
+
         document.getElementById('btn-prev-page').disabled = this.state.tablePage === 1;
         document.getElementById('btn-next-page').disabled = this.state.tablePage === totalPages;
     }
