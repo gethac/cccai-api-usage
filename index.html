@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token 吞金兽透视镜 🧿</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f8fafc;
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* 酷炫渐变文字 */
+        .text-gradient {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-image: linear-gradient(90deg, #8b5cf6, #ec4899, #3b82f6);
+            background-size: 200% auto;
+            animation: gradientMove 5s linear infinite;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        /* 玻璃拟态卡片效果 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        /* 脉冲发光按钮 */
+        .btn-glow {
+            position: relative;
+        }
+        .btn-glow::after {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            background: inherit;
+            border-radius: inherit;
+            z-index: -1;
+            filter: blur(8px);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .btn-glow:hover::after {
+            opacity: 0.6;
+        }
+
+        .fade-in { animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden-tab { display: none !important; }
+        .chart-container { width: 100%; height: 350px; }
+
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="text-slate-800 p-4 md:p-8">
+
+<div class="max-w-7xl mx-auto space-y-8 pb-12">
+
+    <!-- 酷炫头部 -->
+    <header class="glass-card rounded-[2rem] p-8 flex flex-col md:flex-row items-center justify-between overflow-hidden relative">
+        <!-- 装饰背景形 -->
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
+        <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
+        
+        <div class="flex items-center space-x-5 z-10 w-full">
+            <div class="p-4 bg-gradient-to-tr from-indigo-500 to-purple-500 text-white rounded-2xl shadow-lg transform rotate-3 hover:rotate-0 transition-transform">
+                <i class="fa-solid fa-ghost text-3xl"></i>
+            </div>
+            <div class="flex-1">
+                <h1 class="text-4xl font-extrabold tracking-tight text-slate-900 mb-1">
+                    Token <span class="text-gradient">吞金兽</span> 透视镜
+                </h1>
+                <p class="text-slate-500 text-[15px] font-medium flex items-center">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-2 text-amber-500"></i>
+                    看看你的 API 余额是怎么被吃掉的... 💸
+                </p>
+            </div>
+        </div>
+    </header>
+
+    <!-- 雷达探测器 (控制面板) -->
+    <div class="glass-card rounded-3xl p-7 space-y-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-slate-100 p-2 rounded-lg text-slate-500"><i class="fa-solid fa-satellite-dish"></i></div>
+                <h2 class="text-xl font-bold text-slate-800">投喂目标锁定</h2>
+            </div>
+            <div id="cache-badge" class="hidden flex items-center space-x-2 text-xs bg-emerald-500/10 text-emerald-600 px-4 py-1.5 rounded-full font-bold shadow-sm border border-emerald-200">
+                <i class="fa-solid fa-box-archive"></i>
+                <span id="cache-badge-text">已唤醒记忆: 0 条碎屑</span>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2 relative group">
+                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">API 接口雷达</label>
+                <div class="relative">
+                    <i class="fa-solid fa-link absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-blue-500 transition-colors"></i>
+                    <input type="text" id="input-url" class="w-full pl-11 pr-4 py-3 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-inner" placeholder="输入要探测的接口地址">
+                </div>
+            </div>
+            <div class="space-y-2 relative group">
+                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">终极秘钥 (Key)</label>
+                <div class="relative">
+                    <i class="fa-solid fa-key absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-purple-500 transition-colors"></i>
+                    <input type="password" id="input-key" class="w-full pl-11 pr-4 py-3 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all font-mono text-sm shadow-inner" placeholder="sk-...">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-4 pt-2">
+            <div class="flex flex-wrap items-center space-x-4 gap-y-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+                <label class="flex items-center space-x-2 text-sm text-slate-600 cursor-pointer hover:text-blue-600 transition-colors font-medium">
+                    <input type="checkbox" id="input-proxy" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer accent-blue-600">
+                    <span>🛸 开启次元穿越 (防跨域拦截)</span>
+                </label>
+                <div class="w-px h-4 bg-slate-300 hidden md:block"></div>
+                <button onclick="app.loadMockData()" id="btn-mock" class="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors flex items-center">
+                    <i class="fa-solid fa-flask mr-1.5"></i> 注入模拟样本
+                </button>
+                <div class="w-px h-4 bg-slate-300 hidden md:block"></div>
+                <button onclick="app.clearCache()" id="btn-clear" class="text-sm font-medium text-rose-400 hover:text-rose-600 transition-colors flex items-center">
+                    <i class="fa-solid fa-eraser mr-1.5"></i> 抹除记忆
+                </button>
+            </div>
+
+            <div class="flex space-x-3">
+                <button id="btn-start" onclick="app.startFetching()" class="btn-glow flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-xl hover:-translate-y-0.5">
+                    <i class="fa-solid fa-radar mr-1"></i>
+                    <span id="btn-start-text">开始深度扫描</span>
+                </button>
+                <button id="btn-stop" onclick="app.stopFetching()" class="hidden btn-glow flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-bold rounded-xl transition-all shadow-md animate-pulse">
+                    <i class="fa-solid fa-hand"></i>
+                    <span>紧急制动</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 扫描实况播报 -->
+    <div id="error-container" class="hidden bg-rose-50/80 backdrop-blur border border-rose-200 text-rose-700 p-5 rounded-2xl flex items-center space-x-4 fade-in shadow-sm">
+        <div class="p-2 bg-rose-100 rounded-full"><i class="fa-solid fa-triangle-exclamation text-xl"></i></div>
+        <p id="error-msg" class="text-sm font-medium"></p>
+    </div>
+
+    <div id="progress-container" class="hidden glass-card p-6 rounded-2xl flex flex-col space-y-5 fade-in">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div id="progress-icon-bg" class="p-3 bg-blue-50 text-blue-500 rounded-2xl transition-colors">
+                    <i id="progress-icon" class="fa-solid fa-satellite fa-spin text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-800 flex items-center text-lg">
+                        <span id="progress-title">雷达正在疯狂扫描底层数据...</span>
+                        <span id="progress-retry" class="hidden ml-3 text-xs bg-amber-500 text-white px-2.5 py-1 rounded-full font-bold shadow-sm animate-pulse flex items-center">
+                            <i class="fa-solid fa-bolt mr-1"></i> 遇到抵抗, 切换节点 <span id="retry-num" class="ml-1"></span>
+                        </span>
+                    </h3>
+                    <p class="text-sm text-slate-500 mt-1 font-medium">
+                        穿透深度: 第 <span id="progress-page" class="text-blue-600 font-bold text-base mx-1">0</span> 层 
+                        <span class="mx-2 opacity-50">|</span> 
+                        打捞战利品: <span id="progress-count" class="text-emerald-600 font-bold text-base mx-1">0</span> 块
+                    </p>
+                </div>
+            </div>
+            <div id="progress-stats-right" class="text-right hidden bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+                <div class="text-xl font-black text-slate-700 font-mono tracking-tight">
+                    <span id="progress-ratio">0 / 0</span>
+                </div>
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                    完成度 <span id="progress-percent" class="text-blue-500 ml-1">0.0%</span>
+                </div>
+            </div>
+        </div>
+        <div id="progress-bar-container" class="hidden w-full bg-slate-100/50 rounded-full h-3 overflow-hidden border border-slate-200/50 p-0.5">
+            <div id="progress-bar" class="h-full rounded-full bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500 transition-all duration-[800ms] ease-out relative" style="width: 0%">
+                <div class="absolute inset-0 bg-white/20 w-full h-full" style="animation: shimmer 2s infinite linear; background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); transform: skewX(-20deg);"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 战损全局看板 (Global Stats) -->
+    <div id="global-stats-container" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 fade-in">
+        <!-- JS 动态渲染 -->
+    </div>
+
+    <!-- 寿命预测仪 -->
+    <div id="prediction-container" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-5 fade-in">
+        <!-- 剩余寿命预测 -->
+        <div class="lg:col-span-1 glass-card bg-gradient-to-br from-slate-900 to-slate-800 p-8 rounded-[2rem] text-white flex flex-col justify-center relative overflow-hidden group">
+            <div class="absolute -right-6 -top-6 text-white/5 group-hover:text-white/10 transition-colors duration-500">
+                <i class="fa-solid fa-stopwatch text-9xl"></i>
+            </div>
+            <div class="relative z-10">
+                <div class="flex items-center space-x-2 text-indigo-200 mb-3">
+                    <div class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></div>
+                    <span class="text-sm font-bold uppercase tracking-widest">余额生命倒计时</span>
+                </div>
+                <div class="flex items-baseline space-x-2">
+                    <h4 id="pred-days" class="text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-200">--</h4>
+                    <span class="text-xl font-bold text-slate-300 mb-2">天</span>
+                </div>
+                <div class="mt-4 inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/5">
+                    <i class="fa-solid fa-chart-pie text-indigo-300 text-xs"></i>
+                    <p id="pred-desc" class="text-xs font-medium text-slate-300">基于近期平均食量计算</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 响应心电图 -->
+        <div class="lg:col-span-2 glass-card p-6 rounded-[2rem] flex flex-col justify-center">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-amber-100 text-amber-600 rounded-xl"><i class="fa-solid fa-heart-pulse"></i></div>
+                    <span class="text-sm font-bold text-slate-700 uppercase tracking-wider">接口心率监测 (耗时分布)</span>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs text-slate-400 font-bold uppercase mb-1">全局平均延迟</div>
+                    <div class="text-2xl font-black text-slate-800 font-mono"><span id="avg-time">--</span><span class="text-sm text-slate-400 ml-1">s</span></div>
+                </div>
+            </div>
+            
+            <div class="relative h-6 w-full bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
+                <div id="time-fast-bar" class="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-1000 ease-out flex items-center justify-center text-[10px] font-bold text-white shadow-[inset_0_2px_4px_rgba(255,255,255,0.3)]" style="width: 0%" title="<5s"></div>
+                <div id="time-normal-bar" class="h-full bg-gradient-to-r from-blue-400 to-blue-500 transition-all duration-1000 ease-out flex items-center justify-center text-[10px] font-bold text-white shadow-[inset_0_2px_4px_rgba(255,255,255,0.3)]" style="width: 0%" title="5-15s"></div>
+                <div id="time-slow-bar" class="h-full bg-gradient-to-r from-rose-400 to-rose-500 transition-all duration-1000 ease-out flex items-center justify-center text-[10px] font-bold text-white shadow-[inset_0_2px_4px_rgba(255,255,255,0.3)]" style="width: 0%" title=">15s"></div>
+            </div>
+            <div class="flex justify-between text-xs font-medium mt-3 px-1">
+                <div class="flex items-center text-emerald-600"><div class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></div>神速 &lt;5s <span id="time-fast-txt" class="ml-1 opacity-70"></span></div>
+                <div class="flex items-center text-blue-600"><div class="w-2 h-2 rounded-full bg-blue-500 mr-1.5"></div>一般 5-15s <span id="time-normal-txt" class="ml-1 opacity-70"></span></div>
+                <div class="flex items-center text-rose-600"><div class="w-2 h-2 rounded-full bg-rose-500 mr-1.5"></div>便秘 &gt;15s <span id="time-slow-txt" class="ml-1 opacity-70"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 核心解剖台 -->
+    <div id="main-content-container" class="hidden glass-card rounded-[2rem] overflow-hidden fade-in">
+        <div class="flex border-b border-slate-100 bg-white/50 p-2 gap-2">
+            <button onclick="app.switchTab('stats')" id="tab-btn-stats" class="flex-1 flex items-center justify-center space-x-2 px-6 py-4 text-sm font-bold transition-all rounded-xl text-white bg-slate-800 shadow-md">
+                <i class="fa-solid fa-chart-pie text-lg"></i>
+                <span>透视数据雷达</span>
+            </button>
+            <button onclick="app.switchTab('data')" id="tab-btn-data" class="flex-1 flex items-center justify-center space-x-2 px-6 py-4 text-sm font-bold transition-all rounded-xl text-slate-500 hover:bg-white hover:text-slate-800">
+                <i class="fa-solid fa-list text-lg"></i>
+                <span id="tab-data-title">碎片明细库 (0)</span>
+            </button>
+        </div>
+
+        <div class="p-6 md:p-8 bg-white/40">
+            <!-- 图表视图 -->
+            <div id="view-stats" class="space-y-8 fade-in">
+                <!-- 第一排图表 -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 relative group hover:shadow-md transition-shadow">
+                        <h3 class="text-sm font-bold text-slate-800 absolute top-6 left-6 z-10 flex items-center">
+                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3"><i class="fa-solid fa-money-bill-wave"></i></div>
+                            它的胃口趋势 (Quota消耗)
+                        </h3>
+                        <div id="chart-trend" class="chart-container mt-8"></div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 relative group hover:shadow-md transition-shadow">
+                        <h3 class="text-sm font-bold text-slate-800 absolute top-6 left-6 z-10 flex items-center">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3"><i class="fa-solid fa-layer-group"></i></div>
+                            喂食/排泄比例 (Tokens)
+                        </h3>
+                        <div id="chart-tokens" class="chart-container mt-8"></div>
+                    </div>
+                </div>
+                <!-- 第二排图表 -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 relative group hover:shadow-md transition-shadow">
+                        <h3 class="text-sm font-bold text-slate-800 absolute top-6 left-6 z-10 flex items-center">
+                            <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mr-3"><i class="fa-solid fa-robot"></i></div>
+                            最受宠的模型 (调用分布)
+                        </h3>
+                        <div id="chart-models" class="chart-container mt-8"></div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 relative group hover:shadow-md transition-shadow">
+                        <h3 class="text-sm font-bold text-slate-800 absolute top-6 left-6 z-10 flex items-center">
+                            <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mr-3"><i class="fa-solid fa-water"></i></div>
+                            对话模式偏好 (Stream vs Normal)
+                        </h3>
+                        <div id="chart-stream" class="chart-container mt-8"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 数据表格视图 -->
+            <div id="view-data" class="hidden fade-in">
+                <div class="overflow-x-auto bg-white border border-slate-100 rounded-2xl shadow-sm">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-slate-500 uppercase bg-slate-50/80 border-b border-slate-100">
+                            <tr>
+                                <th class="px-6 py-4 font-bold tracking-wider">时间戳</th>
+                                <th class="px-6 py-4 font-bold tracking-wider">苦力模型 (Model)</th>
+                                <th class="px-6 py-4 font-bold tracking-wider">掉血量 (Quota)</th>
+                                <th class="px-6 py-4 font-bold tracking-wider">入/出 (Tokens)</th>
+                                <th class="px-6 py-4 font-bold tracking-wider">憋气时间(s)</th>
+                                <th class="px-6 py-4 font-bold tracking-wider">姿势</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-slate-50">
+                            <!-- JS 动态渲染 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="flex items-center justify-between mt-6 px-2">
+                    <div id="table-info" class="text-sm font-medium text-slate-500">定位中...</div>
+                    <div class="flex space-x-2 bg-white p-1 rounded-xl shadow-sm border border-slate-100">
+                        <button id="btn-prev-page" onclick="app.changeTablePage(-1)" class="px-4 py-2 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent font-bold text-slate-600 transition-colors"><i class="fa-solid fa-chevron-left mr-1"></i> 上页</button>
+                        <div class="w-px bg-slate-200 my-2"></div>
+                        <span id="table-page-info" class="px-4 py-2 font-black text-slate-800 font-mono">1 / 1</span>
+                        <div class="w-px bg-slate-200 my-2"></div>
+                        <button id="btn-next-page" onclick="app.changeTablePage(1)" class="px-4 py-2 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent font-bold text-slate-600 transition-colors">下页 <i class="fa-solid fa-chevron-right ml-1"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+/**
+ * 核心应用逻辑 (纯原生 JavaScript + ECharts)
+ */
+const app = {
+    state: {
+        config: {
+            url: 'http://www.cccai.cfd/api/public/token/query',
+            key: '',
+            pageSize: 100,
+            useProxy: true
+        },
+        isFetching: false,
+        shouldFetch: false,
+        progress: { page: 0, count: 0, total: 0, status: 'idle', retry: 0 },
+        data: [],
+        globalStats: null,
+        errorMsg: '',
+        activeTab: 'stats',
+        tablePage: 1,
+        tablePageSize: 15,
+        charts: {} 
+    },
+
+    PROXIES: [
+        (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+        (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+        (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`
+    ],
+
+    // 科技感配色方案
+    colors: ['#8b5cf6', '#3b82f6', '#10b981', '#ec4899', '#f59e0b', '#06b6d4', '#f43f5e'],
+
+    init() {
+        this.bindEvents();
+        this.loadConfigFromInputs();
+        this.loadCache();
+        this.renderAll();
+        
+        window.addEventListener('resize', () => {
+            Object.values(this.state.charts).forEach(chart => chart && chart.resize());
+        });
+    },
+
+    bindEvents() {
+        document.getElementById('input-url').value = this.state.config.url;
+        document.getElementById('input-key').value = this.state.config.key;
+        document.getElementById('input-proxy').checked = this.state.config.useProxy;
+
+        document.getElementById('input-url').addEventListener('input', (e) => { this.state.config.url = e.target.value; });
+        document.getElementById('input-key').addEventListener('input', (e) => { 
+            this.state.config.key = e.target.value; 
+            this.loadCache(); 
+            this.renderAll();
+        });
+        document.getElementById('input-proxy').addEventListener('change', (e) => { this.state.config.useProxy = e.target.checked; });
+    },
+
+    loadConfigFromInputs() {
+        this.state.config.url = document.getElementById('input-url').value;
+        this.state.config.key = document.getElementById('input-key').value;
+        this.state.config.useProxy = document.getElementById('input-proxy').checked;
+    },
+
+    getCacheKey() {
+        return `token_api_cache_v3_${this.state.config.key}`; 
+    },
+
+    loadCache() {
+        if (!this.state.config.key) return;
+        const cached = localStorage.getItem(this.getCacheKey());
+        if (cached) {
+            try {
+                const parsed = JSON.parse(cached);
+                this.state.data = parsed.data || [];
+                this.state.globalStats = parsed.globalStats || null;
+                this.state.progress = { page: 0, count: this.state.data.length, total: parsed.globalStats?.stats?.total_calls || 0, status: 'complete', retry: 0 };
+                this.state.tablePage = 1;
+            } catch (e) {
+                console.error("缓存解析失败:", e);
+            }
+        } else {
+            this.state.data = [];
+            this.state.globalStats = null;
+            this.state.progress = { page: 0, count: 0, total: 0, status: 'idle', retry: 0 };
+        }
+    },
+
+    saveCache() {
+        try {
+            localStorage.setItem(this.getCacheKey(), JSON.stringify({
+                data: this.state.data,
+                globalStats: this.state.globalStats
+            }));
+        } catch (e) {
+            console.warn("写入 localStorage 失败，可能超出浏览器限额", e);
+        }
+    },
+
+    clearCache() {
+        if (confirm('警告！是否要清空记忆芯片？这会让你重新开始漫长的拉取过程。')) {
+            localStorage.removeItem(this.getCacheKey());
+            this.state.data = [];
+            this.state.globalStats = null;
+            this.state.progress = { page: 0, count: 0, total: 0, status: 'idle', retry: 0 };
+            this.renderAll();
+        }
+    },
+
+    formatNumber(num) {
+        if (!num) return '0';
+        if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
+        if (num >= 1000) return (num / 1000).toFixed(2) + 'K';
+        return Number(num).toLocaleString();
+    },
+
+    getItemSignature(item) {
+        return `${item.created_at}_${item.model_name}_${item.prompt_tokens}_${item.completion_tokens}_${item.use_time}`;
+    },
+
+    async fetchWithRetry(rawUrl, retries = 6) {
+        for (let i = 0; i < retries; i++) {
+            try {
+                this.state.progress.retry = i > 0 ? i : 0;
+                this.renderProgress();
+
+                let targetUrl = rawUrl;
+                if (this.state.config.useProxy) {
+                    targetUrl = this.PROXIES[i % this.PROXIES.length](rawUrl);
+                }
+
+                const response = await fetch(targetUrl, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!response.ok) throw new Error(`HTTP 状态码: ${response.status}`);
+                const json = await response.json();
+
+                if (json && json.error && typeof json.error === 'string' && json.error.includes('proxy')) {
+                    throw new Error(`Proxy Error: ${json.error}`);
+                }
+                return json;
+            } catch (err) {
+                console.warn(`第 ${i + 1} 次请求失败:`, err.message);
+                if (i === retries - 1) throw err;
+                if (!this.state.shouldFetch) throw new Error('用户手动停止');
+                await new Promise(r => setTimeout(r, 1500 * (i + 1)));
+            }
+        }
+    },
+
+    async startFetching() {
+        this.loadConfigFromInputs();
+        if (!this.state.config.url || !this.state.config.key) {
+            this.state.errorMsg = '指挥官，请先输入坐标(URL)和秘钥(Key)！';
+            this.renderError();
+            return;
+        }
+
+        this.state.isFetching = true;
+        this.state.shouldFetch = true;
+        this.state.errorMsg = '';
+        this.state.progress = { page: 0, count: 0, total: 0, status: 'fetching', retry: 0 };
+        this.renderAll();
+
+        let currentPage = 1;
+        let newItemsThisSession = [];
+        let overlapFound = false;
+        let knownTotal = this.state.globalStats?.stats?.total_calls || 0;
+        
+        const existingSignatures = new Set(this.state.data.map(this.getItemSignature));
+
+        try {
+            while (this.state.shouldFetch) {
+                this.state.progress.page = currentPage;
+                this.renderProgress();
+
+                const rawUrl = `${this.state.config.url}?key=${this.state.config.key}&p=${currentPage}&page_size=${this.state.config.pageSize}`;
+                const json = await this.fetchWithRetry(rawUrl, 6);
+
+                if (currentPage === 1 && json?.data?.stats) {
+                    this.state.globalStats = { stats: json.data.stats, token: json.data.token };
+                    knownTotal = json.data?.logs?.total || 0;
+                    this.state.progress.total = knownTotal;
+                }
+
+                let items = json?.data?.logs?.items || [];
+                if (!items.length) {
+                    const findArray = (obj, depth = 0) => {
+                        if (depth > 3 || !obj || typeof obj !== 'object') return null;
+                        if (Array.isArray(obj)) return obj;
+                        for (let key in obj) {
+                            if (Array.isArray(obj[key])) return obj[key];
+                            if (obj[key] && typeof obj[key] === 'object') {
+                                let found = findArray(obj[key], depth + 1);
+                                if(found) return found;
+                            }
+                        }
+                        return null;
+                    };
+                    items = findArray(json) || [];
+                }
+
+                if (items.length === 0) break;
+
+                let pageNovelItems = [];
+                for (let item of items) {
+                    if (!existingSignatures.has(this.getItemSignature(item))) {
+                        pageNovelItems.push(item);
+                    } else {
+                        overlapFound = true;
+                    }
+                }
+
+                newItemsThisSession = [...newItemsThisSession, ...pageNovelItems];
+                this.state.data = [...newItemsThisSession, ...this.state.data.filter(oldItem => !newItemsThisSession.some(newItem => this.getItemSignature(newItem) === this.getItemSignature(oldItem)))];
+                
+                this.state.progress.count = this.state.data.length;
+                this.renderProgress();
+                this.renderGlobalStats();
+
+                if (overlapFound || items.length < this.state.config.pageSize || (knownTotal > 0 && this.state.data.length >= knownTotal)) {
+                    break;
+                }
+
+                currentPage++;
+                await new Promise(r => setTimeout(r, 1200));
+            }
+
+            if (this.state.shouldFetch) {
+                this.state.progress.status = 'complete';
+            } else {
+                this.state.progress.status = 'stopped';
+            }
+            this.state.progress.retry = 0;
+            this.saveCache();
+            this.renderAll(); 
+
+        } catch (error) {
+            console.error(error);
+            this.state.progress.status = 'error';
+            if (error.message !== '用户手动停止') {
+                this.state.errorMsg = error.message.includes('Failed to fetch') 
+                    ? '星际网络波动剧烈，所有节点均已失联。已为您保存搜集到的残骸，稍后可重试。' 
+                    : `系统异常: ${error.message}`;
+            }
+        } finally {
+            this.state.isFetching = false;
+            this.state.shouldFetch = false;
+            this.renderAll();
+        }
+    },
+
+    stopFetching() {
+        this.state.shouldFetch = false;
+    },
+
+    loadMockData() {
+        const mockData = Array.from({ length: 850 }).map((_, i) => {
+            const daysAgo = Math.floor(Math.pow(Math.random(), 2) * 30);
+            return {
+                created_at: Math.floor(Date.now()/1000) - Math.floor(daysAgo * 86400) - Math.floor(Math.random() * 3600), 
+                token_name: "测试Token",
+                model_name: Math.random() > 0.5 ? "claude-3-5-sonnet-20240620" : (Math.random() > 0.4 ? "gpt-4o" : (Math.random() > 0.2 ? "dall-e-3" : "gemini-1.5-pro")),
+                quota: Math.floor(Math.random() * 150000) + 1000,
+                prompt_tokens: Math.floor(Math.random() * 30000),
+                completion_tokens: Math.floor(Math.random() * 1500),
+                use_time: Math.floor(Math.random() * 20) + (Math.random()>0.9? 20: 1),
+                is_stream: Math.random() > 0.15
+            }
+        }).sort((a,b) => b.created_at - a.created_at);
+
+        this.state.data = mockData;
+        this.state.globalStats = {
+            stats: { total_quota: 50000000, used_quota: 42000000, remain_quota: 8000000, total_calls: 850 },
+            token: { name: "测试用·极客之眼", status: 1, unlimited_quota: false }
+        };
+        this.state.progress = { page: 9, count: mockData.length, total: mockData.length, status: 'complete', retry: 0 };
+        this.state.errorMsg = '';
+        this.state.tablePage = 1;
+        this.renderAll();
+    },
+
+    switchTab(tab) {
+        this.state.activeTab = tab;
+        const btnStats = document.getElementById('tab-btn-stats');
+        const btnData = document.getElementById('tab-btn-data');
+        const viewStats = document.getElementById('view-stats');
+        const viewData = document.getElementById('view-data');
+
+        if (tab === 'stats') {
+            btnStats.className = 'flex-1 flex items-center justify-center space-x-2 px-6 py-4 text-sm font-bold transition-all rounded-xl text-white bg-slate-800 shadow-md transform scale-[1.02] z-10';
+            btnData.className = 'flex-1 flex items-center justify-center space-x-2 px-6 py-4 text-sm font-bold transition-all rounded-xl text-slate-500 hover:bg-white hover:text-slate-800';
+            viewStats.classList.remove('hidden-tab');
+            viewData.classList.add('hidden-tab');
+            setTimeout(() => { Object.values(this.state.charts).forEach(chart => chart && chart.resize()); }, 50);
+        } else {
+            btnData.className = 'flex-1 flex items-center justify-center space-x-2 px-6 py-4 text-sm font-bold transition-all rounded-xl text-white bg-slate-800 shadow-md transform scale-[1.02] z-10';
+            btnStats.className = 'flex-1 flex items-center justify-center space-x-2 px-6 py-4 text-sm font-bold transition-all rounded-xl text-slate-500 hover:bg-white hover:text-slate-800';
+            viewData.classList.remove('hidden-tab');
+            viewStats.classList.add('hidden-tab');
+        }
+    },
+
+    changeTablePage(delta) {
+        const totalPages = Math.max(1, Math.ceil(this.state.data.length / this.state.tablePageSize));
+        let newPage = this.state.tablePage + delta;
+        if (newPage < 1) newPage = 1;
+        if (newPage > totalPages) newPage = totalPages;
+        this.state.tablePage = newPage;
+        this.renderTableView();
+    },
+
+    renderAll() {
+        this.renderControls();
+        this.renderError();
+        this.renderProgress();
+        this.renderGlobalStats();
+        
+        if (this.state.data.length > 0) {
+            document.getElementById('main-content-container').classList.remove('hidden');
+            document.getElementById('prediction-container').classList.remove('hidden');
+            document.getElementById('tab-data-title').innerText = `碎片明细库 (${this.state.data.length})`;
+            this.processDataAndRenderCharts();
+            this.renderTableView();
+        } else {
+            document.getElementById('main-content-container').classList.add('hidden');
+            document.getElementById('prediction-container').classList.add('hidden');
+        }
+    },
+
+    renderControls() {
+        const inputs = ['input-url', 'input-key', 'input-proxy', 'btn-mock', 'btn-clear'];
+        inputs.forEach(id => document.getElementById(id).disabled = this.state.isFetching);
+        
+        if (this.state.isFetching) {
+            document.getElementById('btn-start').classList.add('hidden');
+            document.getElementById('btn-stop').classList.remove('hidden');
+        } else {
+            document.getElementById('btn-start').classList.remove('hidden');
+            document.getElementById('btn-stop').classList.add('hidden');
+            document.getElementById('btn-start-text').innerText = this.state.data.length > 0 ? '续传增量补完' : '发动全面扫描';
+        }
+
+        const badge = document.getElementById('cache-badge');
+        if (this.state.data.length > 0) {
+            badge.classList.remove('hidden');
+            document.getElementById('cache-badge-text').innerText = `已载入 ${this.state.data.length} 块记忆`;
+        } else {
+            badge.classList.add('hidden');
+        }
+    },
+
+    renderError() {
+        const el = document.getElementById('error-container');
+        if (this.state.errorMsg) {
+            el.classList.remove('hidden');
+            document.getElementById('error-msg').innerText = this.state.errorMsg;
+        } else {
+            el.classList.add('hidden');
+        }
+    },
+
+    renderProgress() {
+        const p = this.state.progress;
+        const el = document.getElementById('progress-container');
+        
+        if ((this.state.isFetching || p.status !== 'idle') && !this.state.errorMsg) {
+            el.classList.remove('hidden');
+            
+            const iconBg = document.getElementById('progress-icon-bg');
+            const icon = document.getElementById('progress-icon');
+            if (this.state.isFetching) {
+                iconBg.className = 'p-3 bg-blue-100 text-blue-600 rounded-2xl transition-colors shadow-inner';
+                icon.className = 'fa-solid fa-satellite-dish fa-beat-fade text-2xl';
+                document.getElementById('progress-title').innerText = '雷达正在疯狂抓取底层数据包...';
+            } else if (p.status === 'complete') {
+                iconBg.className = 'p-3 bg-emerald-100 text-emerald-600 rounded-2xl transition-colors';
+                icon.className = 'fa-solid fa-check-double text-2xl';
+                document.getElementById('progress-title').innerText = '扫描作业圆满结束！';
+            } else {
+                iconBg.className = 'p-3 bg-amber-100 text-amber-600 rounded-2xl transition-colors';
+                icon.className = 'fa-solid fa-hand text-2xl';
+                document.getElementById('progress-title').innerText = '作业已中止';
+            }
+
+            const retryBadge = document.getElementById('progress-retry');
+            if (p.retry > 0) {
+                retryBadge.classList.remove('hidden');
+                document.getElementById('retry-num').innerText = p.retry % 3 + 1;
+            } else {
+                retryBadge.classList.add('hidden');
+            }
+
+            document.getElementById('progress-page').innerText = p.page;
+            document.getElementById('progress-count').innerText = this.state.data.length;
+
+            if (p.total > 0) {
+                document.getElementById('progress-stats-right').classList.remove('hidden');
+                document.getElementById('progress-bar-container').classList.remove('hidden');
+                document.getElementById('progress-ratio').innerText = `${this.state.data.length} / ${p.total}`;
+                
+                const percent = Math.min(100, (this.state.data.length / p.total) * 100).toFixed(1);
+                document.getElementById('progress-percent').innerText = `${percent}%`;
+                
+                const bar = document.getElementById('progress-bar');
+                bar.style.width = `${percent}%`;
+                if(p.status === 'error') bar.className = 'h-full rounded-full bg-rose-500 transition-all duration-[800ms]';
+                else if(p.retry > 0) bar.className = 'h-full rounded-full bg-amber-500 transition-all duration-[800ms]';
+                else bar.className = 'h-full rounded-full bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500 transition-all duration-[800ms] ease-out relative';
+            } else {
+                document.getElementById('progress-stats-right').classList.add('hidden');
+                document.getElementById('progress-bar-container').classList.add('hidden');
+            }
+        } else {
+            el.classList.add('hidden');
+        }
+    },
+
+    renderGlobalStats() {
+        const stats = this.state.globalStats;
+        const container = document.getElementById('global-stats-container');
+        
+        if (stats) {
+            container.classList.remove('hidden');
+            const usedPct = ((stats.stats.used_quota / Math.max(1, stats.stats.total_quota)) * 100).toFixed(2);
+            
+            container.innerHTML = `
+                <div class="glass-card p-6 rounded-[2rem] flex flex-col border-t-4 border-t-indigo-500">
+                    <div class="flex items-center space-x-3 text-slate-500 mb-4">
+                        <div class="bg-indigo-50 w-8 h-8 rounded-full flex items-center justify-center text-indigo-600"><i class="fa-solid fa-id-card-clip"></i></div>
+                        <span class="text-sm font-bold uppercase tracking-wider">代号 / 状态</span>
+                    </div>
+                    <div class="mt-auto">
+                        <h4 class="text-2xl font-black text-slate-800 truncate tracking-tight" title="${stats.token.name}">${stats.token.name}</h4>
+                        <div class="flex items-center mt-3 space-x-2">
+                            <span class="px-3 py-1 text-xs font-bold rounded-lg shadow-sm ${stats.token.status === 1 ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}">
+                                ${stats.token.status === 1 ? '<i class="fa-solid fa-power-off mr-1"></i> 运行中' : '<i class="fa-solid fa-ban mr-1"></i> 已断开'}
+                            </span>
+                            ${stats.token.unlimited_quota ? '<span class="px-3 py-1 text-xs font-bold rounded-lg shadow-sm bg-gradient-to-r from-purple-500 to-indigo-500 text-white"><i class="fa-solid fa-infinity mr-1"></i> 无限火力</span>' : ''}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-card p-6 rounded-[2rem] border-t-4 border-t-blue-500 flex flex-col justify-between">
+                    <div class="flex items-center space-x-3 text-slate-500 mb-2">
+                        <div class="bg-blue-50 w-8 h-8 rounded-full flex items-center justify-center text-blue-600"><i class="fa-solid fa-sack-dollar"></i></div>
+                        <span class="text-sm font-bold uppercase tracking-wider">弹药库容量 (Quota)</span>
+                    </div>
+                    <h4 class="text-4xl font-black text-slate-800 mt-2">${this.formatNumber(stats.stats.total_quota)}</h4>
+                </div>
+
+                <div class="glass-card p-6 rounded-[2rem] border-t-4 border-t-rose-500 flex flex-col justify-between">
+                    <div class="flex items-center space-x-3 text-slate-500 mb-2">
+                        <div class="bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center text-rose-600"><i class="fa-solid fa-fire-flame-curved"></i></div>
+                        <span class="text-sm font-bold uppercase tracking-wider">已燃烧弹药 (Used)</span>
+                    </div>
+                    <div>
+                        <h4 class="text-4xl font-black text-rose-600 mt-2">${this.formatNumber(stats.stats.used_quota)}</h4>
+                        <div class="flex items-center mt-3 space-x-3">
+                            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                <div class="bg-rose-500 h-full rounded-full" style="width: ${usedPct}%"></div>
+                            </div>
+                            <span class="text-xs font-bold text-slate-400 whitespace-nowrap">${usedPct}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-6 rounded-[2rem] border-t-4 border-t-emerald-500 flex flex-col justify-between">
+                    <div class="flex items-center space-x-3 text-slate-500 mb-2">
+                        <div class="bg-emerald-50 w-8 h-8 rounded-full flex items-center justify-center text-emerald-600"><i class="fa-solid fa-vault"></i></div>
+                        <span class="text-sm font-bold uppercase tracking-wider">剩余存粮 (Remain)</span>
+                    </div>
+                    <div>
+                        <h4 class="text-4xl font-black text-emerald-500 mt-2">${this.formatNumber(stats.stats.remain_quota)}</h4>
+                        <p class="text-xs font-bold text-slate-400 mt-3 bg-slate-50 inline-block px-3 py-1 rounded-lg">总计开火: ${Number(stats.stats.total_calls).toLocaleString()} 次</p>
+                    </div>
+                </div>
+            `;
+        } else {
+            container.classList.add('hidden');
+        }
+    },
+
+    processDataAndRenderCharts() {
+        const data = this.state.data;
+        if (!data || data.length === 0) return;
+
+        let dailyData = {}; 
+        let modelCount = {}; 
+        let streamTypes = { 'Stream': 0, 'Normal': 0 };
+        let totalUseTime = 0;
+        let timeDist = { fast: 0, normal: 0, slow: 0 };
+
+        let minTime = Number.MAX_SAFE_INTEGER;
+        let maxTime = 0;
+
+        data.forEach(item => {
+            if (item.created_at < minTime) minTime = item.created_at;
+            if (item.created_at > maxTime) maxTime = item.created_at;
+
+            const dateStr = new Date(item.created_at * 1000).toISOString().split('T')[0];
+            if (!dailyData[dateStr]) dailyData[dateStr] = { quota: 0, prompt: 0, completion: 0, calls: 0 };
+            
+            dailyData[dateStr].quota += (item.quota || 0);
+            dailyData[dateStr].prompt += (item.prompt_tokens || 0);
+            dailyData[dateStr].completion += (item.completion_tokens || 0);
+            dailyData[dateStr].calls += 1;
+
+            if (item.model_name) modelCount[item.model_name] = (modelCount[item.model_name] || 0) + 1;
+            if (item.is_stream) streamTypes['Stream']++; else streamTypes['Normal']++;
+            
+            totalUseTime += (item.use_time || 0);
+            const t = item.use_time || 0;
+            if (t < 5) timeDist.fast++;
+            else if (t <= 15) timeDist.normal++;
+            else timeDist.slow++;
+        });
+
+        const daysDiff = Math.max(1, (maxTime - minTime) / 86400);
+        let avgDailyQuota = 0;
+        let predictedDays = '--';
+        
+        if (this.state.globalStats && this.state.globalStats.stats.remain_quota > 0) {
+            const totalQuotaInPeriod = Object.values(dailyData).reduce((sum, d) => sum + d.quota, 0);
+            avgDailyQuota = totalQuotaInPeriod / daysDiff;
+            
+            if (avgDailyQuota > 0) {
+                const remain = this.state.globalStats.stats.remain_quota;
+                const days = Math.round(remain / avgDailyQuota);
+                predictedDays = days > 999 ? '999+' : days;
+            }
+        } else if (this.state.globalStats && this.state.globalStats.token.unlimited_quota) {
+            predictedDays = '无限';
+        }
+        document.getElementById('pred-days').innerText = `${predictedDays}`;
+        document.getElementById('pred-desc').innerText = avgDailyQuota > 0 ? `依据近况，每日约烧掉 ${this.formatNumber(avgDailyQuota)} Quota` : '数据太少，算命先生罢工了';
+
+        const total = data.length;
+        document.getElementById('avg-time').innerText = (totalUseTime / total).toFixed(2);
+        
+        const fastPct = ((timeDist.fast / total) * 100).toFixed(1);
+        const normalPct = ((timeDist.normal / total) * 100).toFixed(1);
+        const slowPct = ((timeDist.slow / total) * 100).toFixed(1);
+        
+        document.getElementById('time-fast-bar').style.width = `${fastPct}%`;
+        document.getElementById('time-normal-bar').style.width = `${normalPct}%`;
+        document.getElementById('time-slow-bar').style.width = `${slowPct}%`;
+        
+        document.getElementById('time-fast-txt').innerText = `(${fastPct}%)`;
+        document.getElementById('time-normal-txt').innerText = `(${normalPct}%)`;
+        document.getElementById('time-slow-txt').innerText = `(${slowPct}%)`;
+
+
+        const dates = Object.keys(dailyData).sort();
+        const quotaSeries = dates.map(d => dailyData[d].quota);
+        const promptSeries = dates.map(d => dailyData[d].prompt);
+        const completionSeries = dates.map(d => dailyData[d].completion);
+
+        let predictDates = [...dates];
+        let predictQuota = [...quotaSeries];
+        if (avgDailyQuota > 0 && dates.length > 0) {
+            const lastDate = new Date(dates[dates.length - 1]);
+            for(let i=1; i<=3; i++) {
+                const nextD = new Date(lastDate);
+                nextD.setDate(nextD.getDate() + i);
+                predictDates.push(nextD.toISOString().split('T')[0]);
+            }
+        }
+        const realLineData = predictDates.map((d, i) => i < dates.length ? quotaSeries[i] : null);
+        const predLineData = predictDates.map((d, i) => i >= dates.length - 1 ? (i === dates.length - 1 ? quotaSeries[i] : Math.round(avgDailyQuota)) : null);
+
+        // ECharts 通用配置
+        const tooltipConfig = { backgroundColor: 'rgba(255, 255, 255, 0.95)', borderColor: '#e2e8f0', textStyle: { color: '#1e293b' }, extraCssText: 'box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 8px;' };
+
+        // 1: 趋势图
+        if (!this.state.charts.trend) this.state.charts.trend = echarts.init(document.getElementById('chart-trend'));
+        this.state.charts.trend.setOption({
+            tooltip: { trigger: 'axis', ...tooltipConfig },
+            legend: { data: ['实际消耗', 'AI预测'], bottom: 0, icon: 'circle' },
+            grid: { left: '2%', right: '4%', bottom: '12%', top: '5%', containLabel: true },
+            xAxis: { type: 'category', boundaryGap: false, data: predictDates, axisLabel: { formatter: val => val.substring(5), color: '#64748b', fontFamily: 'Nunito' }, axisLine: { lineStyle: { color: '#e2e8f0' } } },
+            yAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed', color: '#f1f5f9' } }, axisLabel: { color: '#64748b', formatter: (value) => this.formatNumber(value) } },
+            series: [
+                {
+                    name: '实际消耗', type: 'line', smooth: 0.4, data: realLineData,
+                    symbol: 'circle', symbolSize: 6, showSymbol: false,
+                    lineStyle: { width: 3, color: '#8b5cf6', shadowColor: 'rgba(139, 92, 246, 0.3)', shadowBlur: 10, shadowOffsetY: 5 },
+                    areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{offset: 0, color: 'rgba(139, 92, 246, 0.4)'}, {offset: 1, color: 'rgba(139, 92, 246, 0)'}]) },
+                    itemStyle: { color: '#8b5cf6', borderWidth: 2, borderColor: '#fff' }
+                },
+                {
+                    name: 'AI预测', type: 'line', smooth: 0.4, data: predLineData,
+                    symbol: 'emptyCircle', symbolSize: 6,
+                    lineStyle: { type: 'dashed', width: 2, color: '#cbd5e1' },
+                    itemStyle: { color: '#94a3b8' }
+                }
+            ]
+        });
+
+        // 2: 堆叠条形图
+        if (!this.state.charts.tokens) this.state.charts.tokens = echarts.init(document.getElementById('chart-tokens'));
+        this.state.charts.tokens.setOption({
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, ...tooltipConfig },
+            legend: { data: ['入账 (Prompt)', '出货 (Completion)'], bottom: 0, icon: 'roundRect' },
+            grid: { left: '2%', right: '4%', bottom: '12%', top: '5%', containLabel: true },
+            xAxis: { type: 'category', data: dates, axisLabel: { formatter: val => val.substring(5), color: '#64748b' }, axisLine: { lineStyle: { color: '#e2e8f0' } } },
+            yAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed', color: '#f1f5f9' } }, axisLabel: { color: '#64748b', formatter: (value) => this.formatNumber(value) } },
+            series: [
+                { name: '入账 (Prompt)', type: 'bar', stack: 'total', data: promptSeries, itemStyle: { color: '#cbd5e1', borderRadius: [0, 0, 4, 4] }, barMaxWidth: 40 },
+                { name: '出货 (Completion)', type: 'bar', stack: 'total', data: completionSeries, itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0], shadowColor: 'rgba(59, 130, 246, 0.3)', shadowBlur: 5 }, barMaxWidth: 40 }
+            ]
+        });
+
+        // 3: 饼图
+        const modelPieData = Object.entries(modelCount).map(([name, value]) => ({ name, value })).sort((a,b)=>b.value-a.value);
+        if (!this.state.charts.models) this.state.charts.models = echarts.init(document.getElementById('chart-models'));
+        this.state.charts.models.setOption({
+            color: this.colors,
+            tooltip: { trigger: 'item', formatter: '<div class="font-bold">{b}</div><div class="text-sm mt-1">{c} 次调用 <span class="text-slate-400">({d}%)</span></div>', ...tooltipConfig },
+            legend: { orient: 'vertical', right: '5%', top: 'center', itemWidth: 12, itemHeight: 12, textStyle: { color: '#475569', fontWeight: 'bold' } },
+            series: [
+                {
+                    type: 'pie', radius: ['50%', '80%'], center: ['35%', '50%'],
+                    itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 3 },
+                    label: { show: false },
+                    data: modelPieData
+                }
+            ]
+        });
+
+        // 4: Stream 饼图
+        if (!this.state.charts.stream) this.state.charts.stream = echarts.init(document.getElementById('chart-stream'));
+        this.state.charts.stream.setOption({
+            tooltip: { trigger: 'item', formatter: '{b}: {c} 次 ({d}%)', ...tooltipConfig },
+            legend: { bottom: '0', left: 'center', icon: 'circle' },
+            color: ['#ec4899', '#e2e8f0'],
+            series: [
+                {
+                    type: 'pie', radius: ['40%', '75%'], center: ['50%', '45%'],
+                    roseType: 'radius',
+                    itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 },
+                    label: { show: true, formatter: '{d}%', color: '#64748b', fontWeight: 'bold' },
+                    data: [
+                        { value: streamTypes['Stream'], name: '🌊 飞流直下 (Stream)' },
+                        { value: streamTypes['Normal'], name: '📦 打包带走 (Normal)' }
+                    ]
+                }
+            ]
+        });
+    },
+
+    renderTableView() {
+        const tbody = document.getElementById('table-body');
+        const data = this.state.data;
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '';
+            return;
+        }
+
+        const start = (this.state.tablePage - 1) * this.state.tablePageSize;
+        const paginatedData = data.slice(start, start + this.state.tablePageSize);
+        const totalPages = Math.max(1, Math.ceil(data.length / this.state.tablePageSize));
+
+        tbody.innerHTML = paginatedData.map(item => `
+            <tr class="hover:bg-slate-50/80 transition-colors group">
+                <td class="px-6 py-4 whitespace-nowrap font-bold text-slate-700 text-xs">
+                    ${new Date(item.created_at * 1000).toLocaleString()}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <span class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md font-bold border border-indigo-100 group-hover:bg-indigo-100 transition-colors">${item.model_name}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap font-mono text-rose-500 font-bold">
+                    -${Number(item.quota).toLocaleString()}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono">
+                    <span class="text-slate-400" title="Prompt">${item.prompt_tokens}</span> 
+                    <span class="mx-1 text-slate-300">/</span> 
+                    <span class="text-blue-600 font-bold" title="Completion">${item.completion_tokens}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap font-mono">
+                    <span class="${item.use_time > 15 ? 'text-rose-500' : 'text-emerald-500'} font-bold bg-slate-50 px-2 py-1 rounded">
+                        <i class="fa-regular fa-clock text-xs mr-1 opacity-50"></i>${item.use_time}s
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-xs font-bold">
+                    ${item.is_stream 
+                        ? '<span class="text-purple-600 flex items-center"><i class="fa-solid fa-water mr-1"></i> Stream</span>' 
+                        : '<span class="text-slate-400 flex items-center"><i class="fa-solid fa-box mr-1"></i> Normal</span>'}
+                </td>
+            </tr>
+        `).join('');
+
+        document.getElementById('table-info').innerHTML = `展现第 <b class="text-slate-800">${start + 1}</b> - <b class="text-slate-800">${Math.min(start + this.state.tablePageSize, data.length)}</b> 块碎片，库中总计 <b class="text-blue-600">${data.length}</b> 块`;
+        document.getElementById('table-page-info').innerText = `${this.state.tablePage} / ${totalPages}`;
+        
+        document.getElementById('btn-prev-page').disabled = this.state.tablePage === 1;
+        document.getElementById('btn-next-page').disabled = this.state.tablePage === totalPages;
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => { app.init(); });
+</script>
+</body>
+</html>
