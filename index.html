@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Token 吞金兽透视镜 🧿</title>
+    <title>Token 析构台</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -97,15 +97,15 @@
         
         <div class="flex items-center space-x-5 z-10 w-full">
             <div class="p-4 bg-gradient-to-tr from-indigo-500 to-purple-500 text-white rounded-2xl shadow-lg transform rotate-3 hover:rotate-0 transition-transform">
-                <i class="fa-solid fa-ghost text-3xl"></i>
+                <i class="fa-solid fa-chart-simple text-3xl"></i>
             </div>
             <div class="flex-1">
                 <h1 class="text-4xl font-extrabold tracking-tight text-slate-900 mb-1">
-                    Token <span class="text-gradient">吞金兽</span> 透视镜
+                    Token <span class="text-gradient">析构台</span>
                 </h1>
                 <p class="text-slate-500 text-[15px] font-medium flex items-center">
-                    <i class="fa-solid fa-wand-magic-sparkles mr-2 text-amber-500"></i>
-                    看看你的 API 余额是怎么被吃掉的... 💸
+                    <i class="fa-solid fa-magnifying-glass-chart mr-2 text-amber-500"></i>
+                    看看你的 API 余额是怎么被吃掉的。
                 </p>
             </div>
         </div>
@@ -116,7 +116,7 @@
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div class="flex items-center space-x-3">
                 <div class="bg-slate-100 p-2 rounded-lg text-slate-500"><i class="fa-solid fa-satellite-dish"></i></div>
-                <h2 class="text-xl font-bold text-slate-800">投喂目标锁定</h2>
+                <h2 class="text-xl font-bold text-slate-800">查询配置</h2>
             </div>
             <div id="cache-badge" class="hidden flex items-center space-x-2 text-xs bg-emerald-500/10 text-emerald-600 px-4 py-1.5 rounded-full font-bold shadow-sm border border-emerald-200">
                 <i class="fa-solid fa-box-archive"></i>
@@ -145,7 +145,7 @@
             <div class="flex flex-wrap items-center space-x-4 gap-y-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
                 <label class="flex items-center space-x-2 text-sm text-slate-600 cursor-pointer hover:text-blue-600 transition-colors font-medium">
                     <input type="checkbox" id="input-proxy" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer accent-blue-600">
-                    <span>🛸 开启次元穿越 (防跨域拦截)</span>
+                    <span>启用跨域代理 (避免拦截)</span>
                 </label>
                 <div class="w-px h-4 bg-slate-300 hidden md:block"></div>
                 <button onclick="app.loadMockData()" id="btn-mock" class="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors flex items-center">
@@ -217,7 +217,7 @@
         <!-- JS 动态渲染 -->
     </div>
 
-    <!-- 寿命预测仪 -->
+    <!-- 余额预测 -->
     <div id="prediction-container" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-5 fade-in">
         <!-- 剩余寿命预测 -->
         <div class="lg:col-span-1 glass-card bg-gradient-to-br from-slate-900 to-slate-800 p-8 rounded-[2rem] text-white flex flex-col justify-center relative overflow-hidden group">
@@ -227,7 +227,7 @@
             <div class="relative z-10">
                 <div class="flex items-center space-x-2 text-indigo-200 mb-3">
                     <div class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></div>
-                    <span class="text-sm font-bold uppercase tracking-widest">余额生命倒计时</span>
+                    <span class="text-sm font-bold uppercase tracking-widest">余额消耗预测</span>
                 </div>
                 <div class="flex items-baseline space-x-2">
                     <h4 id="pred-days" class="text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-200">--</h4>
@@ -259,9 +259,9 @@
                 <div id="time-slow-bar" class="h-full bg-gradient-to-r from-rose-400 to-rose-500 transition-all duration-1000 ease-out flex items-center justify-center text-[10px] font-bold text-white shadow-[inset_0_2px_4px_rgba(255,255,255,0.3)]" style="width: 0%" title=">15s"></div>
             </div>
             <div class="flex justify-between text-xs font-medium mt-3 px-1">
-                <div class="flex items-center text-emerald-600"><div class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></div>神速 &lt;5s <span id="time-fast-txt" class="ml-1 opacity-70"></span></div>
+                <div class="flex items-center text-emerald-600"><div class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></div>快速 &lt;5s <span id="time-fast-txt" class="ml-1 opacity-70"></span></div>
                 <div class="flex items-center text-blue-600"><div class="w-2 h-2 rounded-full bg-blue-500 mr-1.5"></div>一般 5-15s <span id="time-normal-txt" class="ml-1 opacity-70"></span></div>
-                <div class="flex items-center text-rose-600"><div class="w-2 h-2 rounded-full bg-rose-500 mr-1.5"></div>便秘 &gt;15s <span id="time-slow-txt" class="ml-1 opacity-70"></span></div>
+                <div class="flex items-center text-rose-600"><div class="w-2 h-2 rounded-full bg-rose-500 mr-1.5"></div>较慢 &gt;15s <span id="time-slow-txt" class="ml-1 opacity-70"></span></div>
             </div>
         </div>
     </div>
@@ -282,19 +282,22 @@
         <div class="p-6 md:p-8 bg-white/40">
             <!-- 图表视图 -->
             <div id="view-stats" class="space-y-8 fade-in">
+                <!-- 关键指标速览 -->
+                <div id="metrics-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+
                 <!-- 第一排图表 -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 relative group hover:shadow-md transition-shadow">
                         <h3 class="text-sm font-bold text-slate-800 absolute top-6 left-6 z-10 flex items-center">
                             <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3"><i class="fa-solid fa-money-bill-wave"></i></div>
-                            它的胃口趋势 (Quota消耗)
+                            Quota 趋势
                         </h3>
                         <div id="chart-trend" class="chart-container mt-8"></div>
                     </div>
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 relative group hover:shadow-md transition-shadow">
                         <h3 class="text-sm font-bold text-slate-800 absolute top-6 left-6 z-10 flex items-center">
                             <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3"><i class="fa-solid fa-layer-group"></i></div>
-                            喂食/排泄比例 (Tokens)
+                            Tokens 构成
                         </h3>
                         <div id="chart-tokens" class="chart-container mt-8"></div>
                     </div>
@@ -319,7 +322,7 @@
             </div>
 
             <!-- 数据表格视图 -->
-            <div id="view-data" class="hidden fade-in">
+            <div id="view-data" class="hidden-tab hidden fade-in">
                 <div class="overflow-x-auto bg-white border border-slate-100 rounded-2xl shadow-sm">
                     <table class="w-full text-sm text-left">
                         <thead class="text-xs text-slate-500 uppercase bg-slate-50/80 border-b border-slate-100">
@@ -509,7 +512,7 @@ const app = {
     async startFetching() {
         this.loadConfigFromInputs();
         if (!this.state.config.url || !this.state.config.key) {
-            this.state.errorMsg = '指挥官，请先输入坐标(URL)和秘钥(Key)！';
+            this.state.errorMsg = '请先输入接口地址(URL)和秘钥(Key)。';
             this.renderError();
             return;
         }
@@ -648,14 +651,25 @@ const app = {
         if (tab === 'stats') {
             btnStats.className = 'flex-1 flex items-center justify-center space-x-2 px-6 py-4 text-sm font-bold transition-all rounded-xl text-white bg-slate-800 shadow-md transform scale-[1.02] z-10';
             btnData.className = 'flex-1 flex items-center justify-center space-x-2 px-6 py-4 text-sm font-bold transition-all rounded-xl text-slate-500 hover:bg-white hover:text-slate-800';
+
+            // 统一使用 hidden-tab 控制显示，避免残留 hidden 导致切换无效
             viewStats.classList.remove('hidden-tab');
+            viewStats.classList.remove('hidden');
             viewData.classList.add('hidden-tab');
+            viewData.classList.add('hidden');
+
             setTimeout(() => { Object.values(this.state.charts).forEach(chart => chart && chart.resize()); }, 50);
         } else {
             btnData.className = 'flex-1 flex items-center justify-center space-x-2 px-6 py-4 text-sm font-bold transition-all rounded-xl text-white bg-slate-800 shadow-md transform scale-[1.02] z-10';
             btnStats.className = 'flex-1 flex items-center justify-center space-x-2 px-6 py-4 text-sm font-bold transition-all rounded-xl text-slate-500 hover:bg-white hover:text-slate-800';
+
             viewData.classList.remove('hidden-tab');
+            viewData.classList.remove('hidden');
             viewStats.classList.add('hidden-tab');
+            viewStats.classList.add('hidden');
+
+            // 切到表格页时重渲染一次，确保分页/排序生效
+            this.renderTableView();
         }
     },
 
@@ -673,13 +687,17 @@ const app = {
         this.renderError();
         this.renderProgress();
         this.renderGlobalStats();
-        
+        this.renderMetrics();
+
         if (this.state.data.length > 0) {
             document.getElementById('main-content-container').classList.remove('hidden');
             document.getElementById('prediction-container').classList.remove('hidden');
             document.getElementById('tab-data-title').innerText = `碎片明细库 (${this.state.data.length})`;
             this.processDataAndRenderCharts();
             this.renderTableView();
+
+            // 保证当前 Tab 的显隐状态正确（避免 view-data 残留 hidden）
+            this.switchTab(this.state.activeTab || 'stats');
         } else {
             document.getElementById('main-content-container').classList.add('hidden');
             document.getElementById('prediction-container').classList.add('hidden');
@@ -774,6 +792,113 @@ const app = {
         }
     },
 
+    renderMetrics() {
+        const el = document.getElementById('metrics-container');
+        if (!el) return;
+
+        const data = this.state.data || [];
+        if (!data.length) {
+            el.innerHTML = '';
+            return;
+        }
+
+        // 近 24 小时、近 7 天等维度
+        const nowSec = Math.floor(Date.now() / 1000);
+        const sec24h = 24 * 3600;
+        const sec7d = 7 * 24 * 3600;
+
+        const last24h = data.filter(x => (nowSec - (x.created_at || 0)) <= sec24h);
+        const last7d = data.filter(x => (nowSec - (x.created_at || 0)) <= sec7d);
+
+        const sumQuota = (arr) => arr.reduce((s, x) => s + (Number(x.quota) || 0), 0);
+        const sumPrompt = (arr) => arr.reduce((s, x) => s + (Number(x.prompt_tokens) || 0), 0);
+        const sumCompletion = (arr) => arr.reduce((s, x) => s + (Number(x.completion_tokens) || 0), 0);
+        const avgTime = (arr) => arr.length ? (arr.reduce((s, x) => s + (Number(x.use_time) || 0), 0) / arr.length) : 0;
+
+        const quota24 = sumQuota(last24h);
+        const quota7d = sumQuota(last7d);
+        const calls24 = last24h.length;
+        const calls7d = last7d.length;
+
+        const tokens24 = sumPrompt(last24h) + sumCompletion(last24h);
+        const tokens7d = sumPrompt(last7d) + sumCompletion(last7d);
+
+        // 最“费钱”的模型（按 quota 聚合）
+        const modelQuota = {};
+        data.forEach(x => {
+            const m = x.model_name || 'unknown';
+            modelQuota[m] = (modelQuota[m] || 0) + (Number(x.quota) || 0);
+        });
+        const topModel = Object.entries(modelQuota).sort((a,b) => b[1]-a[1])[0];
+        const topModelName = topModel ? topModel[0] : '--';
+        const topModelQuota = topModel ? topModel[1] : 0;
+
+        // “稳定性”粗评：近7天平均耗时 vs 全局平均耗时
+        const avgAll = avgTime(data);
+        const avg7 = avgTime(last7d);
+        let stabilityLabel = '平稳';
+        let stabilityClass = 'text-emerald-700 bg-emerald-500/10 border-emerald-200';
+        if (avg7 > avgAll * 1.25) {
+            stabilityLabel = '偏慢';
+            stabilityClass = 'text-rose-700 bg-rose-500/10 border-rose-200';
+        } else if (avg7 < avgAll * 0.85) {
+            stabilityLabel = '更顺';
+            stabilityClass = 'text-blue-700 bg-blue-500/10 border-blue-200';
+        }
+
+        const card = ({iconBg, icon, title, value, sub, accent}) => `
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">${title}</div>
+                        <div class="mt-2 text-2xl font-black text-slate-800 font-mono tracking-tight">${value}</div>
+                        <div class="mt-2 text-sm text-slate-500 font-medium">${sub}</div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center ${iconBg} ${accent || ''}">
+                        <i class="${icon}"></i>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        el.innerHTML = [
+            card({
+                iconBg: 'bg-indigo-50 text-indigo-600',
+                icon: 'fa-solid fa-bolt',
+                title: '近24h消耗',
+                value: this.formatNumber(quota24),
+                sub: `调用 ${calls24.toLocaleString()} 次 · Tokens ${this.formatNumber(tokens24)}`
+            }),
+            card({
+                iconBg: 'bg-blue-50 text-blue-600',
+                icon: 'fa-solid fa-calendar-week',
+                title: '近7天消耗',
+                value: this.formatNumber(quota7d),
+                sub: `调用 ${calls7d.toLocaleString()} 次 · Tokens ${this.formatNumber(tokens7d)}`
+            }),
+            card({
+                iconBg: 'bg-amber-50 text-amber-600',
+                icon: 'fa-solid fa-crown',
+                title: '最费的模型',
+                value: topModelName,
+                sub: `累计 Quota ${this.formatNumber(topModelQuota)}`
+            }),
+            `
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">接口节奏</div>
+                        <div class="mt-2 inline-flex items-center px-3 py-1.5 rounded-xl border text-sm font-bold ${stabilityClass}">${stabilityLabel}</div>
+                        <div class="mt-3 text-sm text-slate-500 font-medium">近7天均耗时 <span class="font-black text-slate-700 font-mono">${avg7.toFixed(2)}s</span> · 全局 <span class="font-black text-slate-700 font-mono">${avgAll.toFixed(2)}s</span></div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-600">
+                        <i class="fa-solid fa-gauge-high"></i>
+                    </div>
+                </div>
+            </div>
+            `
+        ].join('');
+    },
     renderGlobalStats() {
         const stats = this.state.globalStats;
         const container = document.getElementById('global-stats-container');
